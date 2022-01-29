@@ -13,33 +13,35 @@ NPM package for [Relogs.io](https://relogs.io "Relogs.io")
         npm install relogs-io-js
 
 1. Initialize the library
-``` Typescript
-const relogs = new Relogs({
-    workspaceId: "<your workspace id>",
-    apiKey: "<your API key>",
-    defaultTable: 'demo-ingest-from-js',
-    redirectConsoleLogs: true, // if true, will upload console logs to Relogs
-    suppressConsoleLogsToConsole: true // if true, will also suppress logs to console
-  })```
-  
+
+    ``` Typescript
+        const relogs = new Relogs({
+        workspaceId: "<your workspace id>",
+        apiKey: "<your API key>",
+        defaultTable: 'demo-ingest-from-js',
+        redirectConsoleLogs: true, // if true, will upload console logs to Relogs
+        suppressConsoleLogsToConsole: true // if true, will also suppress logs to console
+        })
+    ```
+
 1. Upload logs
-``` Typescript
-  console.info("TEST this will be logged as info");
-  console.warn("TEST this will be logged as warning");
-  console.error("TEST this will be logged as error");
-  console.log("TEST parameters will also be logged", { hello: "world" }, { anotherParam: 1 });
+    ``` Typescript
+        console.info("TEST this will be logged as info");
+        console.warn("TEST this will be logged as warning");
+        console.error("TEST this will be logged as error");
+        console.log("TEST parameters will also be logged", { hello: "world" }, { anotherParam: 1 });
 
-  await relogs.flushAsync(); // Can call flush to upload the logs (logs are flushed every second by default) 
+        await relogs.flushAsync(); // Can call flush to upload the logs (logs are flushed every second by default) 
 
-  relogs.track({
-    myEvent: "You can log anything you want",
-    moreData: 1234
-  }, "customTableName");
+        relogs.track({
+        myEvent: "You can log anything you want",
+        moreData: 1234
+        }, "customTableName");
 
-  await relogs.end(); // Flush and stop logging (will wait for logs to upload for up to 10 seconds)
+        await relogs.end(); // Flush and stop logging (will wait for logs to upload for up to 10 seconds)
 
-  console.log(`This log will not be uploaded to Relogs`);
-```
+        console.log(`This log will not be uploaded to Relogs`);
+    ```
 1. You should see the logs in your workspace:
 [![uploaded logs](https://github.com/Relogs-io/relogs-io-js/blob/master/docs/uploadedLogs.png?raw=true "uploaded logs")](https://github.com/Relogs-io/relogs-io-js/blob/master/docs/uploadedLogs.png?raw=true "uploaded logs")
  

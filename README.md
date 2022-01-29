@@ -21,8 +21,9 @@ const relogs = new Relogs({
     redirectConsoleLogs: true, // if true, will upload console logs to Relogs
     suppressConsoleLogsToConsole: true // if true, will also suppress logs to console
   })```
+  
 1. Upload logs
-```javascript
+``` Typescript
   console.info("TEST this will be logged as info");
   console.warn("TEST this will be logged as warning");
   console.error("TEST this will be logged as error");

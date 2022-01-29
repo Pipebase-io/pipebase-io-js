@@ -1,0 +1,53 @@
+{
+  "name": "relogs-io-js",
+  "version": "0.1.0",
+  "description": "NPM package for Relogs.io",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "jest --config jestconfig.json",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint src/**",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Relogs-io/relogs-io-js.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Relogs-io/relogs-io-js/issues"
+  },
+  "homepage": "https://github.com/Relogs-io/relogs-io-js#readme",
+  "devDependencies": {
+    "@types/jest": "^25.2.1",
+    "@types/lodash": "^4.14.178",
+    "@types/node": "^13.13.0",
+    "@typescript-eslint/parser": "^2.28.0",
+    "dotenv": "^14.3.2",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-jest": "^23.8.2",
+    "jest": "^25.3.0",
+    "prettier": "^2.0.4",
+    "ts-jest": "^25.4.0",
+    "typescript": "^3.8.3"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "dependencies": {
+    "@types/node-fetch": "^2.5.6",
+    "async-wait-until": "^2.0.12",
+    "axios": "^0.25.0",
+    "lodash": "^4.17.21",
+    "node-fetch": "^2.6.0"
+  }
+}

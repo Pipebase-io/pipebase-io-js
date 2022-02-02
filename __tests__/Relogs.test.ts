@@ -16,24 +16,10 @@ test('Playground', async () => {
     ingestConsoleLogs: true
   });
 
-  // const scenario = "scenario 6"
-
-  // for (let i = 0; i < 20000; i++) {
-  //   console.info(`TEST ${scenario} info - ${i}`, { hello: "world" }, i * 4);
-  // }
-
-  // for (let i = 0; i < 20000; i++) {
-  //   console.warn(`TEST ${scenario} warn - ${i}`);
-  // }
-
-  // for (let i = 0; i < 30000; i++) {
-  //   console.error(`TEST ${scenario} error - ${i}`);
-  // }
-
   console.info(`TEST this will be logged as info`);
   console.warn(`TEST this will be logged as warning `);
   console.error(`TEST this will be logged as error `);
-  console.log("TEST parameters will also be logged", { hello: "world" }, { anotherParam: 1 });
+  console.log("TEST parameters will also be logged", { hello: "woaaaaaaaaaaaa aaaaaaaaaaaaaa aaaaaaaaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaa aaaaaaaaa aaaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaa aaaaaaaaa aaaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaa aaaaaaaaa aaaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaa aaaaaaaaa aaaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaa aaaaaaaaa aaaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaa aaaaaaaaa aaaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaa aaaaaaaaa aaaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaa aaaaaaaaa aaaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaa aaaaaaaaa aaaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaa aaaaaaaaa aaaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaaaaa aaaaaaaaaaa aaaaa aaaaaaaaa aaaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaaa aaaarld" }, { anotherParam: 1 }, 5, 6, 7);
 
   await relogs.flushAsync(); // Can call flush to upload the logs (logs are flushed every second by default) 
 

@@ -22,6 +22,7 @@ export class Relogs {
   private flushIntervalId: number = -1;
   private uploadJobsInProgress: number = 0;
   private consoleFunctions: any = {};
+
   constructor(relogsConfigs: RelogsConfigs) {
     this.relogsConfigs = relogsConfigs;
     if (relogsConfigs.workspaceId?.length === 0 || relogsConfigs.apiKey?.length === 0) {
@@ -57,6 +58,7 @@ export class Relogs {
     this.consoleFunctions["warn"] = console.warn;
     this.consoleFunctions["error"] = console.error;
   }
+
   _restoreConsoleFunctions() {
     console.log = this.consoleFunctions["log"];
     console.info = this.consoleFunctions["info"];

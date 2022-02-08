@@ -16,11 +16,11 @@ NPM package for [Relogs.io](https://relogs.io "Relogs.io")
 
     ``` Typescript
         const relogs = new Relogs({
-        workspaceId: "<your workspace id>",
-        apiKey: "<your API key>",
-        defaultTable: 'demo-ingest-from-js',
-        redirectConsoleLogs: true, // if true, will upload console logs to Relogs
-        suppressConsoleLogsToConsole: true // if true, will also suppress logs to console
+            workspaceId: "<your workspace id>",
+            apiKey: "<your API key>",
+            defaultTable: 'demo-ingest-from-js',
+            ingestConsoleLogs: true, // if true, will upload console logs to Relogs
+            suppressConsoleLogsToConsole: true // if true, will also suppress logs to console
         })
     ```
 
@@ -34,9 +34,9 @@ NPM package for [Relogs.io](https://relogs.io "Relogs.io")
         await relogs.flushAsync(); // Can call flush to upload the logs (logs are flushed every second by default) 
 
         relogs.track({
-        myEvent: "You can log anything you want",
-        moreData: 1234
-        }, "customTableName");
+            myEvent: "You can log anything you want",
+            moreData: 1234
+            }, "customTableName");
 
         await relogs.end(); // Flush and stop logging (will wait for logs to upload for up to 10 seconds)
 

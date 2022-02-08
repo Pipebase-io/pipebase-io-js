@@ -1,6 +1,6 @@
 {
   "name": "relogs-io-js",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "NPM package for Relogs.io",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

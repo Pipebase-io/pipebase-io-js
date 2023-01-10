@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as _ from 'lodash';
 import { waitUntil } from 'async-wait-until';
 
-export type RelogsConfigs = {
+export type PipebaseConfigs = {
   workspaceId: string;
   apiKey: string;
   defaultTable?: string;
@@ -15,28 +15,28 @@ type Event = {
   tableName: string;
 };
 
-export class Relogs {
-  relogsConfigs: RelogsConfigs;
+export class PipebaseClient {
+  pipebaseConfigs: PipebaseConfigs;
   private eventsBuffer: Event[] = [];
   private isActive: boolean = false;
   private flushIntervalId: number = -1;
   private uploadJobsInProgress: number = 0;
   private consoleFunctions: any = {};
 
-  constructor(relogsConfigs: RelogsConfigs) {
-    this.relogsConfigs = relogsConfigs;
-    if (relogsConfigs.workspaceId?.length === 0 || relogsConfigs.apiKey?.length === 0) {
+  constructor(pipebaseConfigs: PipebaseConfigs) {
+    this.pipebaseConfigs = pipebaseConfigs;
+    if (pipebaseConfigs.workspaceId?.length === 0 || pipebaseConfigs.apiKey?.length === 0) {
       console.error('No workspace id/api key');
       return;
     }
 
-    if (relogsConfigs.ingestConsoleLogs && !relogsConfigs.defaultTable) {
+    if (pipebaseConfigs.ingestConsoleLogs && !pipebaseConfigs.defaultTable) {
       console.error('Need to define a default table name');
       return;
     }
     this.isActive = true;
 
-    if (relogsConfigs.ingestConsoleLogs) {
+    if (pipebaseConfigs.ingestConsoleLogs) {
       this._saveConsoleFunctions();
       console.log = this._getCapturingFunction('Info', console.log);
       console.info = this._getCapturingFunction('Info', console.info);
@@ -71,7 +71,7 @@ export class Relogs {
       if (this.isActive) {
         this.track({ severity, trace, traceArguments: args });
       }
-      if (!this.isActive || !this.relogsConfigs.suppressConsoleLogsToConsole) {
+      if (!this.isActive || !this.pipebaseConfigs.suppressConsoleLogsToConsole) {
         oldConsole(trace, ...args);
       }
     };
@@ -84,7 +84,7 @@ export class Relogs {
   async end() {
     this.isActive = false;
     clearInterval(this.flushIntervalId);
-    if (this.relogsConfigs.ingestConsoleLogs) {
+    if (this.pipebaseConfigs.ingestConsoleLogs) {
       this._restoreConsoleFunctions();
     }
 
@@ -114,25 +114,25 @@ export class Relogs {
   }
 
   private async sendEventAsync(eventData: Object, tableName: string = '') {
-    if (tableName.length === 0 && !!this.relogsConfigs.defaultTable) {
-      tableName = this.relogsConfigs.defaultTable;
+    if (tableName.length === 0 && !!this.pipebaseConfigs.defaultTable) {
+      tableName = this.pipebaseConfigs.defaultTable;
     }
-    await this._sendLogsToRelogsIo(tableName, eventData);
+    await this._sendLogsToPipebaseIo(tableName, eventData);
   }
 
-  private async _sendLogsToRelogsIo(tableName: string, payload: any) {
+  private async _sendLogsToPipebaseIo(tableName: string, payload: any) {
     try {
       const response = await axios.request({
         method: 'post',
-        baseURL: 'https://relogs-ingest-webhook-eus.azurewebsites.net',
-        url: `/api/v1/ingest/${this.relogsConfigs.workspaceId}/${tableName}?expand=true`,
+        baseURL: 'https://pipebase.io',
+        url: `/ingest/v1/${this.pipebaseConfigs.workspaceId}/${tableName}?expand=true`,
         data: payload,
         headers: {
-          'X-API-KEY': `${this.relogsConfigs.apiKey}`,
+          'X-API-KEY': `${this.pipebaseConfigs.apiKey}`,
           'Access-Control-Allow-Origin': true,
         },
       });
-      console.debug('relogs result: ', response.status);
+      console.debug('result: ', response.status);
     } catch (error) {
       console.debug('error: ', (error as any)?.response?.data ?? error);
     }

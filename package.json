@@ -1,7 +1,7 @@
 {
-  "name": "relogs-io-js",
+  "name": "pipebase-io-js",
   "version": "0.1.5",
-  "description": "NPM package for Relogs.io",
+  "description": "NPM package for Pipebase.io",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -17,15 +17,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Relogs-io/relogs-io-js.git"
+    "url": "git+https://github.com/Pipebase-io/pipebase-io-js.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Relogs-io/relogs-io-js/issues"
+    "url": "https://github.com/Pipebase-io/pipebase-io-js/issues"
   },
-  "homepage": "https://github.com/Relogs-io/relogs-io-js#readme",
+  "homepage": "https://github.com/Pipebase-io/pipebase-io-js#readme",
   "devDependencies": {
     "@types/jest": "^25.2.1",
     "@types/lodash": "^4.14.178",

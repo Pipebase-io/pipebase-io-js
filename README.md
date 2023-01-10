@@ -1,27 +1,27 @@
-# relogs-io-js
+# pipebase-io-js
 
-NPM package for [Relogs.io](https://relogs.io "Relogs.io")
+NPM package for [Pipebase.io](https://Pipebase.io "Pipebase.io")
 
 
 ## Usage
 
-1. If you don't have a Relogs workspace, go create one (30 seconds, free): [app.relogs.io](https://app.relogs.io "app.relogs.io")
+1. If you don't have a Pipebase workspace, go create one (30 seconds, free): [app.pipebase.io](https://app.pipebase.io "app.pipebase.io")
 
-1. Note your `workspace id` and `API key` ([See here](https://github.com/Relogs-io/integrations/blob/main/images/IngestionPage-Creds.jpg "See here") on how to get them)
+1. Note your `workspace id` and `API key` ([See here](https://github.com/Pipebase-io/integrations/blob/main/images/IngestionPage-Creds.jpg "See here") on how to get them)
 1. Install the package
 
-        npm install relogs-io-js
+        npm install pipebase-io-js
 
 1. Initialize the library
 
     ``` Typescript
-   import {Relogs} from 'relogs-io-js';
+   import {PipebaseClient} from 'pipebase-io-js';
 
-   const relogs = new Relogs({
+   const pipebaseClient = new PipebaseClient({
        workspaceId: "<your workspace id>",
        apiKey: "<your API key>",
        defaultTable: 'demo-ingest-from-js',
-       ingestConsoleLogs: true, // if true, will upload console logs to Relogs
+       ingestConsoleLogs: true, // if true, will upload console logs to Pipebase
        suppressConsoleLogsToConsole: true // if true, will also suppress logs to console
    })
     ```
@@ -33,19 +33,19 @@ NPM package for [Relogs.io](https://relogs.io "Relogs.io")
    console.error("TEST this will be logged as error");
    console.log("TEST parameters will also be logged", { hello: "world" }   { anotherParam: 1 });
 
-   await relogs.flushAsync(); // Can call flush to upload the logs (log   are flushed every second by default) 
+   await pipebaseClient.flushAsync(); // Can call flush to upload the logs (log   are flushed every second by default) 
 
-   relogs.track({
+   pipebaseClient.track({
        myEvent: "You can log anything you want",
        moreData: 1234
        }, "customTableName");
 
-   await relogs.end(); // Flush and stop logging (will wait for logs t   upload for up to 10 seconds)
+   await pipebaseClient.end(); // Flush and stop logging (will wait for logs t   upload for up to 10 seconds)
 
-   console.log(`This log will not be uploaded to Relogs`);
+   console.log(`This log will not be uploaded to Pipebase.io`);
     ```
 1. You should see the logs in your workspace:
-[![uploaded logs](https://github.com/Relogs-io/relogs-io-js/blob/master/docs/uploadedLogs.png?raw=true "uploaded logs")](https://github.com/Relogs-io/relogs-io-js/blob/master/docs/uploadedLogs.png?raw=true "uploaded logs")
+[![uploaded logs](https://github.com/Pipebase-io/pipebase-io-js/blob/master/docs/uploadedLogs.png?raw=true "uploaded logs")](https://github.com/Pipebase-io/pipebase-io-js/blob/master/docs/uploadedLogs.png?raw=true "uploaded logs")
  
 
 ## Development 

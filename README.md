@@ -1,6 +1,6 @@
 # pipebase-io-js
 
-NPM package for [Pipebase.io](https://Pipebase.io "Pipebase.io")
+NPM package for [Pipebase.io](https://app.pipebase.io "Pipebase.io")
 
 
 ## Usage

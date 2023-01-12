@@ -1,42 +1,82 @@
+/* eslint-disable no-unused-vars */
 import axios from 'axios';
 import * as _ from 'lodash';
 import { waitUntil } from 'async-wait-until';
 
+export const PIPEBASE_DEFAULT_INGESTION_ENDPOINT = 'https://pipebase.io/ingest';
+export const PIPEBASE_INGEST_INTERVAL_MS = 1000;
+
+export const PIPEBASE_FLUSH_TIMEOUT_MS = 10 * 1000;
+export const PIPEBASE_FLUSH_WAIT_INTERVAL_MS = 500;
+
 export type PipebaseConfigs = {
   workspaceId: string;
   apiKey: string;
+
   defaultTable?: string;
   ingestConsoleLogs?: boolean;
   suppressConsoleLogsToConsole?: boolean;
+
+  ingestionEndpoint?: string;
+  ingestInterval?: number;
+  flushTimeout?: number;
+  flushCheckInterval?: number;
 };
 
-type Event = {
-  eventData: any;
-  tableName: string;
-};
+export function NewPipebaseConfig(
+  workspaceId: string,
+  apiKey: string,
+  defaultTable: string = '',
+  ingestConsoleLogs: boolean = false,
+  suppressConsoleLogsToConsole: boolean = false,
+) {
+  const config = updateDefaultConfigParameters({
+    workspaceId: workspaceId,
+    apiKey: apiKey,
+    defaultTable: defaultTable,
+    ingestConsoleLogs: ingestConsoleLogs,
+    suppressConsoleLogsToConsole: suppressConsoleLogsToConsole,
+  });
 
-export class PipebaseClient {
-  pipebaseConfigs: PipebaseConfigs;
-  private eventsBuffer: Event[] = [];
-  private isActive: boolean = false;
-  private flushIntervalId: number = -1;
+  validateConfig(config);
+  return config;
+}
+
+export interface IPipebaseClient {
+  track: (eventData: any, tableName: string) => void;
+  endAsync: () => Promise<void>;
+  flushAsync: () => Promise<void>;
+  isIngestionCompleted: () => boolean;
+}
+
+export class PipebaseClient implements IPipebaseClient {
+  //#region Private Members
+  config: PipebaseConfigs;
+  private eventsBuffer: { [tableName: string]: any[] } = {};
+  private flushIntervalId: number | undefined = undefined;
   private uploadJobsInProgress: number = 0;
   private consoleFunctions: any = {};
+  //#endregion
 
-  constructor(pipebaseConfigs: PipebaseConfigs) {
-    this.pipebaseConfigs = pipebaseConfigs;
-    if (pipebaseConfigs.workspaceId?.length === 0 || pipebaseConfigs.apiKey?.length === 0) {
-      console.error('No workspace id/api key');
-      return;
+  //#region Constructors
+  constructor(config: PipebaseConfigs) {
+    if (!config) {
+      throw Error('Config must be provided');
     }
 
-    if (pipebaseConfigs.ingestConsoleLogs && !pipebaseConfigs.defaultTable) {
-      console.error('Need to define a default table name');
-      return;
+    if (!config.apiKey || !config.workspaceId) {
+      console.error('No workspace id or api key provided');
+      throw Error('No workspace id or api key provided');
     }
-    this.isActive = true;
 
-    if (pipebaseConfigs.ingestConsoleLogs) {
+    if (config.ingestConsoleLogs && !config.defaultTable) {
+      throw Error('defaultTable must be provided when ingestConsoleLogs enabled');
+    }
+
+    this.config = updateDefaultConfigParameters(config);
+    logConfig(this.config);
+
+    if (config.ingestConsoleLogs) {
       this._saveConsoleFunctions();
       console.log = this._getCapturingFunction('Info', console.log);
       console.info = this._getCapturingFunction('Info', console.info);
@@ -48,93 +88,146 @@ export class PipebaseClient {
       (() => {
         this.flushAsync();
       }) as Function,
-      1000,
+      config.ingestInterval,
     );
   }
+  //#endregion
 
-  _saveConsoleFunctions() {
-    this.consoleFunctions["log"] = console.log;
-    this.consoleFunctions["info"] = console.info;
-    this.consoleFunctions["warn"] = console.warn;
-    this.consoleFunctions["error"] = console.error;
+  //#region Public Methods
+  track(eventData: any, tableName: string = '') {
+    if (!tableName && !this.config.defaultTable) {
+      console.error('No table provided and default table is not set');
+    }
+
+    let finalTableName = !tableName ? (this.config.defaultTable as string) : tableName;
+    if (!(finalTableName in this.eventsBuffer)) {
+      this.eventsBuffer[finalTableName] = [eventData];
+    } else {
+      this.eventsBuffer[finalTableName].push(eventData);
+    }
   }
 
-  _restoreConsoleFunctions() {
-    console.log = this.consoleFunctions["log"];
-    console.info = this.consoleFunctions["info"];
-    console.warn = this.consoleFunctions["warn"];
-    console.error = this.consoleFunctions["error"];
+  async endAsync() {
+    clearInterval(this.flushIntervalId);
+    if (this.config.ingestConsoleLogs) {
+      this._restoreConsoleFunctions();
+    }
+
+    await this.flushAsync();
+    await waitUntil(() => this.isIngestionCompleted(), {
+      timeout: this.config.flushTimeout,
+      intervalBetweenAttempts: this.config.flushCheckInterval,
+    });
   }
 
-  _getCapturingFunction = (severity: string, oldConsole: any) => {
+  async flushAsync() {
+    const buffer = { ...this.eventsBuffer };
+    this.eventsBuffer = {};
+    for (let tableName in buffer) {
+      await this._flushTableAsync(tableName, buffer[tableName]);
+    }
+  }
+
+  isIngestionCompleted(): boolean {
+    return Object.keys(this.eventsBuffer).length === 0 && this.uploadJobsInProgress === 0;
+  }
+  //#endregion
+
+  //#region Private Methods
+  private _saveConsoleFunctions() {
+    this.consoleFunctions['log'] = console.log;
+    this.consoleFunctions['info'] = console.info;
+    this.consoleFunctions['warn'] = console.warn;
+    this.consoleFunctions['error'] = console.error;
+  }
+
+  private _restoreConsoleFunctions() {
+    console.log = this.consoleFunctions['log'];
+    console.info = this.consoleFunctions['info'];
+    console.warn = this.consoleFunctions['warn'];
+    console.error = this.consoleFunctions['error'];
+  }
+
+  private _getCapturingFunction = (severity: string, oldConsole: any) => {
     return (trace: any, ...args: any) => {
-      if (this.isActive) {
-        this.track({ severity, trace, traceArguments: args });
-      }
-      if (!this.isActive || !this.pipebaseConfigs.suppressConsoleLogsToConsole) {
+      this.track({ severity, trace, traceArguments: args }, this.config.defaultTable);
+
+      if (!this.config.suppressConsoleLogsToConsole) {
         oldConsole(trace, ...args);
       }
     };
   };
 
-  track(eventData: any, tableName: string = '') {
-    this.eventsBuffer.push({ eventData, tableName });
-  }
+  private async _flushTableAsync(tableName: string, events: any[]) {
+    console.debug(`Flushing to table '${tableName}' with event count: ${events.length}`);
 
-  async end() {
-    this.isActive = false;
-    clearInterval(this.flushIntervalId);
-    if (this.pipebaseConfigs.ingestConsoleLogs) {
-      this._restoreConsoleFunctions();
-    }
-
-    await this.flushAsync();
-    await waitUntil(() => this.eventsBuffer.length === 0 && this.uploadJobsInProgress === 0, {
-      timeout: 10 * 1000 /*ms*/,
-    });
-  }
-
-  async flushAsync() {
-    if (this.eventsBuffer.length === 0) {
-      return;
-    }
     this.uploadJobsInProgress++;
-    const eventsBufferSnapshot = [...this.eventsBuffer];
-    this.eventsBuffer = [];
-    console.debug('flush called with event count:', eventsBufferSnapshot.length);
-    const eventsByTables: any = _.groupBy(eventsBufferSnapshot, (e: Event) => e.tableName);
-
-    for (const [tableName, events] of Object.entries(eventsByTables)) {
-      await this.sendEventAsync(
-        (events as Event[]).map((e: Event) => e.eventData),
-        tableName,
-      );
-    }
+    const result = await this._sendLogsToPipebaseIo(tableName, events);
     this.uploadJobsInProgress--;
-  }
 
-  private async sendEventAsync(eventData: Object, tableName: string = '') {
-    if (tableName.length === 0 && !!this.pipebaseConfigs.defaultTable) {
-      tableName = this.pipebaseConfigs.defaultTable;
-    }
-    await this._sendLogsToPipebaseIo(tableName, eventData);
+    console.info(`Flushing to table '${tableName}' ended with result: ${result}`);
   }
 
   private async _sendLogsToPipebaseIo(tableName: string, payload: any) {
     try {
       const response = await axios.request({
         method: 'post',
-        baseURL: 'https://pipebase.io',
-        url: `/ingest/v1/${this.pipebaseConfigs.workspaceId}/${tableName}?expand=true`,
+        baseURL: this.config.ingestionEndpoint,
+        url: `/v1/${this.config.workspaceId}/${tableName}?expand=true`,
         data: payload,
         headers: {
-          'X-API-KEY': `${this.pipebaseConfigs.apiKey}`,
+          'X-API-KEY': `${this.config.apiKey}`,
           'Access-Control-Allow-Origin': true,
         },
       });
+
       console.debug('result: ', response.status);
+      return response.status;
     } catch (error) {
       console.debug('error: ', (error as any)?.response?.data ?? error);
+      return (error as any)?.response?.status ?? -1;
     }
   }
+  //#endregion
+}
+
+function validateConfig(config: PipebaseConfigs) {
+  if (!config) {
+    throw Error('Config must be provided');
+  }
+
+  if (!config.apiKey || !config.workspaceId) {
+    console.error('No workspace id or api key provided');
+    throw Error('No workspace id or api key provided');
+  }
+
+  if (config.ingestConsoleLogs && !config.defaultTable) {
+    throw Error('defaultTable must be provided when ingestConsoleLogs enabled');
+  }
+}
+
+function logConfig(config: PipebaseConfigs) {
+  const configToLog = { ...config, apiKey: config.apiKey ? '****' : '' };
+  console.log(configToLog);
+}
+
+function updateDefaultConfigParameters(pipebaseConfig: PipebaseConfigs): PipebaseConfigs {
+  let config = { ...pipebaseConfig };
+  if (!config.ingestionEndpoint) {
+    config.ingestionEndpoint = PIPEBASE_DEFAULT_INGESTION_ENDPOINT;
+  }
+
+  if (!config.ingestInterval || config.ingestInterval <= 0) {
+    config.ingestInterval = PIPEBASE_INGEST_INTERVAL_MS;
+  }
+
+  if (!config.flushTimeout || config.flushTimeout <= 0) {
+    config.flushTimeout = PIPEBASE_FLUSH_TIMEOUT_MS;
+  }
+
+  if (!config.flushCheckInterval || config.flushCheckInterval <= 0) {
+    config.flushCheckInterval = PIPEBASE_FLUSH_WAIT_INTERVAL_MS;
+  }
+
+  return config;
 }

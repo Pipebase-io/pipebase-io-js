@@ -2,6 +2,7 @@
 
 NPM package for [Pipebase.io](https://app.pipebase.io "Pipebase.io")
 
+[![CI](https://github.com/Pipebase-io/pipebase-io-js/actions/workflows/main.yml/badge.svg)](https://github.com/Pipebase-io/pipebase-io-js/actions/workflows/main.yml)
 
 ## Usage
 
